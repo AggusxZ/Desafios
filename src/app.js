@@ -1,44 +1,28 @@
 const express = require('express');
-const ProductManager = require('./ProductManager'); 
+const path = require('path');
+const fs = require('fs');
+
+const productsRouter = require('./productsRoutes');
+const cartsRouter = require('./cartsRoutes');
 
 const app = express();
-const PORT = 3000; 
+const PORT = 8080;
+const filePath = path.resolve(__dirname, '../productos.json');
 
-const productManager = new ProductManager('productos.json'); 
+app.use(express.json());
+app.use('/api/products', productsRouter);
+app.use('/api/carts', cartsRouter);
 
-app.get('/products', async (req, res) => {
-  try {
-    const { limit } = req.query;
-    const products = await productManager.getProducts();
-    
-    if (limit) {
-      const limitedProducts = products.slice(0, parseInt(limit, 10));
-      return res.json(limitedProducts);
+app.get('/', (req, res) => {
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error al leer el archivo:', err);
+      return;
     }
-    
-    return res.json(products);
-  } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-app.get('/products/:pid', async (req, res) => {
-  try {
-    const { pid } = req.params;
-    const product = await productManager.getProductById(parseInt(pid, 10));
-    
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    
-    return res.json(product);
-  } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
+    res.send(data);
+  });
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-console.log('Se ha iniciado el servidor');

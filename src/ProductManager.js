@@ -13,6 +13,7 @@ class ProductManager {
       await this.writeProducts(products);
     } catch (error) {
       console.error('Error al agregar el producto:', error);
+      throw error;
     }
   }
 
@@ -48,6 +49,7 @@ class ProductManager {
       }
     } catch (error) {
       console.error('Error al actualizar el producto:', error);
+      throw error;
     }
   }
 
@@ -58,6 +60,7 @@ class ProductManager {
       await this.writeProducts(products);
     } catch (error) {
       console.error('Error al eliminar el producto:', error);
+      throw error;
     }
   }
 
@@ -65,9 +68,9 @@ class ProductManager {
     try {
       const data = await fs.readFile(this.path, 'utf-8');
       const parsedData = JSON.parse(data);
-  
       return parsedData || [];
     } catch (error) {
+      console.error('Error al leer el archivo:', error);
       return [];
     }
   }
@@ -76,8 +79,8 @@ class ProductManager {
     try {
       await fs.writeFile(this.path, JSON.stringify(products, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error al escribir en el archivo:', error);
-      throw error; 
+      console.error('Error al escribir el archivo:', error);
+      throw error;
     }
   }
 
