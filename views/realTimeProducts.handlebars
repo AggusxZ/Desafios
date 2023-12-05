@@ -1,0 +1,46 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const socket = io(); 
+
+    socket.on('productoAgregado', (producto) => {
+      
+      const productsList = document.getElementById('realTimeProducts');
+      const listItem = document.createElement('li');
+      listItem.textContent = `${producto.name} - Precio: ${producto.price}`;
+      productsList.appendChild(listItem);
+    });
+
+    
+    const addProductForm = document.getElementById('addProductForm');
+    addProductForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const productName = addProductForm.elements.productName.value;
+      const productPrice = addProductForm.elements.productPrice.value;
+
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: productName, price: productPrice }),
+      });
+
+      addProductForm.reset();
+    });
+  });
+</script>
+
+<h1>Lista de Productos en Tiempo Real</h1>
+<ul id="realTimeProducts">
+  {{#each products}}
+    <li>{{this.name}} - Precio: {{this.price}}</li>
+  {{/each}}
+</ul>
+
+<form id="addProductForm">
+  <input type="text" name="productName" placeholder="Nombre del producto">
+  <input type="number" name="productPrice" placeholder="Precio">
+  <button type="submit">Agregar Producto</button>
+</form>

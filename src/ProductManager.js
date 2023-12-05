@@ -1,16 +1,28 @@
 const fs = require('fs/promises');
+const io = require('socket.io')();
 
 class ProductManager {
-  constructor(filePath) {
+  constructor(filePath, io) {
     this.path = filePath;
+    this.io = io;
   }
 
   async addProduct(product) {
     try {
       const products = await this.readProducts();
+      const existingProduct = products.find(p => p.code === product.code);
+  
+      if (existingProduct) {
+        throw new Error('El código del producto ya existe');
+      }
+  
       product.id = this.generateId(products);
       products.push(product);
       await this.writeProducts(products);
+      
+      this.io.emit('productoAgregado', product);
+      
+      return product; 
     } catch (error) {
       console.error('Error al agregar el producto:', error);
       throw error;
@@ -40,18 +52,30 @@ class ProductManager {
     try {
       let products = await this.readProducts();
       const index = products.findIndex(product => product.id === id);
-
-      if (index !== -1) {
-        products[index] = { ...products[index], ...updatedProduct };
-        await this.writeProducts(products);
-      } else {
-        console.error('Producto no encontrado para actualizar.');
+  
+      if (index === -1) {
+        throw new Error('Producto no encontrado para actualizar');
       }
+  
+      const allowedProperties = ['name', 'price', 'description']; 
+  
+      const filteredUpdatedProduct = Object.keys(updatedProduct)
+        .filter(key => allowedProperties.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = updatedProduct[key];
+          return obj;
+        }, {});
+  
+      products[index] = { ...products[index], ...filteredUpdatedProduct };
+      await this.writeProducts(products);
+  
+      return products[index]; 
     } catch (error) {
       console.error('Error al actualizar el producto:', error);
       throw error;
     }
   }
+  
 
   async deleteProduct(id) {
     try {

@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
-const ProductManager = require('./ProductManager'); 
+const ProductManager = require('../ProductManager'); 
 
 const productsRouter = express.Router();
-const productManager = new ProductManager(path.resolve(__dirname, '../productos.json'));
+const productManager = new ProductManager(path.resolve(__dirname, '../../productos.json'));
 
 productsRouter.get('/', async (req, res) => {
     try {
