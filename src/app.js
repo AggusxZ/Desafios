@@ -14,9 +14,13 @@ const PORT = 8080;
 const filePath = path.resolve(__dirname, '../productos.json');
 
 // Configuración de Handlebars 
-app.engine('handlebars', exphbs());
+app.engine('handlebars', exphbs.engine({
+  layoutsDir: path.join(__dirname, '../views/layouts/'), 
+  extname: 'handlebars', 
+  defaultLayout: 'home', 
+}));
 app.set('view engine', 'handlebars');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '../views'));
 
 // Middlewares
 app.use(express.json());
@@ -50,10 +54,10 @@ app.get('/', (req, res) => {
 app.get('/home', async (req, res) => {
   try {
     const products = await productManager.getProducts();
-    res.render('home', { products }); 
+    res.render('layouts/home', { products }); 
   } catch (error) {
     console.error('Error al obtener productos:', error);
-    res.render('error', { error: 'Error al obtener los productos' });
+    res.render('layouts/error', { error: 'Error al obtener los productos' });
   }
 });
 
@@ -61,10 +65,10 @@ app.get('/home', async (req, res) => {
 app.get('/realtimeproducts', async (req, res) => {
   try {
     const products = await productManager.getProducts();
-    res.render('realTimeProducts', { products }); 
+    res.render('layouts/realTimeProducts', { products }); 
   } catch (error) {
     console.error('Error al obtener productos:', error);
-    res.render('error', { error: 'Error al obtener los productos' });
+    res.render('layouts/error', { error: 'Error al obtener los productos' });
   }
 });
 
