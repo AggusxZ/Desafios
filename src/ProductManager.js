@@ -1,5 +1,6 @@
 const fs = require('fs/promises');
 const io = require('socket.io')();
+const Product = require('./models/product.model')
 
 class ProductManager {
   constructor(filePath, io) {
@@ -9,20 +10,17 @@ class ProductManager {
 
   async addProduct(product) {
     try {
-      const products = await this.readProducts();
-      const existingProduct = products.find(p => p.code === product.code);
+      const newProduct = new Product({
+        name: product.name,
+        price: product.price,
+        description: product.description,
+      });
   
-      if (existingProduct) {
-        throw new Error('El código del producto ya existe');
-      }
-  
-      product.id = this.generateId(products);
-      products.push(product);
-      await this.writeProducts(products);
+      await newProduct.save();
       
-      this.io.emit('productoAgregado', product);
+      this.io.emit('productoAgregado', newProduct);
       
-      return product; 
+      return newProduct; 
     } catch (error) {
       console.error('Error al agregar el producto:', error);
       throw error;
@@ -31,7 +29,7 @@ class ProductManager {
 
   async getProducts() {
     try {
-      return await this.readProducts();
+      return await Product.find({});
     } catch (error) {
       console.error('Error al obtener los productos:', error);
       return [];
@@ -40,8 +38,7 @@ class ProductManager {
 
   async getProductById(id) {
     try {
-      const products = await this.readProducts();
-      return products.find(product => product.id === id);
+      return await Product.findById(id);
     } catch (error) {
       console.error('Error al obtener el producto por ID:', error);
       return null;
@@ -50,38 +47,16 @@ class ProductManager {
 
   async updateProduct(id, updatedProduct) {
     try {
-      let products = await this.readProducts();
-      const index = products.findIndex(product => product.id === id);
-  
-      if (index === -1) {
-        throw new Error('Producto no encontrado para actualizar');
-      }
-  
-      const allowedProperties = ['name', 'price', 'description']; 
-  
-      const filteredUpdatedProduct = Object.keys(updatedProduct)
-        .filter(key => allowedProperties.includes(key))
-        .reduce((obj, key) => {
-          obj[key] = updatedProduct[key];
-          return obj;
-        }, {});
-  
-      products[index] = { ...products[index], ...filteredUpdatedProduct };
-      await this.writeProducts(products);
-  
-      return products[index]; 
+      return await Product.findByIdAndUpdate(id, updatedProduct, { new: true });
     } catch (error) {
       console.error('Error al actualizar el producto:', error);
       throw error;
     }
   }
   
-
   async deleteProduct(id) {
     try {
-      let products = await this.readProducts();
-      products = products.filter(product => product.id !== id);
-      await this.writeProducts(products);
+      return await Product.findByIdAndDelete(id);
     } catch (error) {
       console.error('Error al eliminar el producto:', error);
       throw error;

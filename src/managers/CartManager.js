@@ -1,41 +1,30 @@
-const fs = require('fs/promises');
+const Cart = require('../models/cart.model');
+const Product = require('../models/product.model');
 
 class CartManager {
-  constructor(filePath) {
-    this.path = filePath;
-  }
-
   async addToCart(cartId, productId) {
     try {
-      const carts = await this.readCarts();
-      let cart = carts.find(c => c.id === cartId);
+      let cart = await Cart.findOne({ cartId });
 
       if (!cart) {
-        cart = {
-          id: cartId,
-          products: []
-        };
-        carts.push(cart);
+        cart = new Cart({ cartId, products: [] });
       }
 
-      const productIndex = cart.products.findIndex(p => p.productId === productId);
+      const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
 
       if (productIndex !== -1) {
-        
         cart.products[productIndex].quantity += 1;
       } else {
-        
-        const products = await this.readProducts();
-        const product = products.find(p => p.id === productId);
+        const product = await Product.findById(productId);
 
         if (!product) {
           throw new Error('El producto no existe');
         }
 
-        cart.products.push({ productId, quantity: 1 });
+        cart.products.push({ productId: product._id, quantity: 1 });
       }
 
-      await this.writeCarts(carts);
+      await cart.save();
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
       throw error;
@@ -44,33 +33,22 @@ class CartManager {
 
   async readCarts() {
     try {
-      const data = await fs.readFile(this.path, 'utf-8');
-      return JSON.parse(data) || [];
+      return await Cart.find({});
     } catch (error) {
-      console.error('Error al leer el archivo de carritos:', error);
+      console.error('Error al obtener los carritos:', error);
       return [];
     }
   }
 
-  async writeCarts(carts) {
+  /* async writeCarts(carts) {
     try {
-      await fs.writeFile(this.path, JSON.stringify(carts, null, 2), 'utf-8');
+      console.warn('writeCarts no está implementado para Mongoose.');
     } catch (error) {
-      console.error('Error al escribir en el archivo de carritos:', error);
+      console.error('Error al escribir en los carritos:', error);
       throw error;
     }
-  }
+  } */
 
-  async readProducts() {
-    try {
-      const productsFilePath = '../../productos.json';
-      const data = await fs.readFile(productsFilePath, 'utf-8');
-      return JSON.parse(data) || [];
-    } catch (error) {
-      console.error('Error al leer el archivo de productos:', error);
-      return [];
-    }
-  }
 }
 
 module.exports = CartManager;
