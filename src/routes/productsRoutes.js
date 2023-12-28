@@ -1,70 +1,41 @@
 const express = require('express');
-const path = require('path');
-const ProductManager = require('../ProductManager'); 
+const router = express.Router();
+const Product = require('../models/product.model');
 
-const productsRouter = express.Router();
-const productManager = new ProductManager(path.resolve(__dirname, '../../productos.json'));
+router.get('/', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, sort, category, availability } = req.query;
 
-productsRouter.get('/', async (req, res) => {
-    try {
-      const { limit } = req.query;
-      const products = await productManager.getProducts();
-  
-      if (limit) {
-        const limitedProducts = products.slice(0, parseInt(limit, 10));
-        return res.json(limitedProducts);
-      }
-  
-      return res.json(products);
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
+    const filter = {};
+    if (category) {
+      filter.category = category;
     }
+    if (availability) {
+      filter.availability = availability;
+    }
+
+    const sortOptions = {};
+    if (sort === 'asc') {
+      sortOptions.price = 1;
+    } else if (sort === 'desc') {
+      sortOptions.price = -1;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const products = await Product.find(filter)
+      .sort(sortOptions)
+      .limit(limit)
+      .skip(skip);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.render('products', { products, totalPages });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
-productsRouter.get('/:pid', async (req, res) => {
-    try {
-      const { pid } = req.params;
-      const product = await productManager.getProductById(parseInt(pid, 10));
-  
-      if (!product) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-  
-      return res.json(product);
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
+module.exports = router;
 
-productsRouter.post('/', async (req, res) => {
-    try {
-      const newProduct = req.body;
-      await productManager.addProduct(newProduct);
-      return res.status(201).json({ message: 'Product added successfully' });
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-  
-productsRouter.put('/:pid', async (req, res) => {
-    try {
-      const { pid } = req.params;
-      const updatedProduct = req.body;
-      await productManager.updateProduct(parseInt(pid, 10), updatedProduct);
-      return res.json({ message: 'Product updated successfully' });
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-  
-productsRouter.delete('/:pid', async (req, res) => {
-    try {
-      const { pid } = req.params;
-      await productManager.deleteProduct(parseInt(pid, 10));
-      return res.json({ message: 'Product deleted successfully' });
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-module.exports = productsRouter;

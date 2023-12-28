@@ -9,17 +9,13 @@ const productsRouter = require('./routes/productsRoutes');
 const cartsRouter = require('./routes/cartsRoutes');
 const ProductManager = require('./ProductManager');
 
-const { connect } = require('mongoose')
+const connectDB = require ('./config/db')
 
 const app = express();
 const PORT = 8080;
 const filePath = path.resolve(__dirname, '../productos.json');
 
-const connectDb = async () => {
-  await connect('mongodb+srv://AggusxZ:rvUh4qLAg6JzENe6@cluster0.46mdk2n.mongodb.net/tiendadejuegos?retryWrites=true&w=majority')
-  console.log('Base de datos conectada')
-}
-connectDb()
+connectDB()
 
 // Configuración de Handlebars 
 app.engine('handlebars', exphbs.engine({
@@ -32,7 +28,7 @@ app.set('views', path.join(__dirname, '../views'));
 
 // Middlewares
 app.use(express.json());
-app.use('/api/products', productsRouter);
+app.use('/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 
 // Creación del servidor HTTP
