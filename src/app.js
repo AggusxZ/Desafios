@@ -7,7 +7,7 @@ const exphbs = require('express-handlebars');
 
 const productsRouter = require('./routes/productsRoutes');
 const cartsRouter = require('./routes/cartsRoutes');
-const ProductManager = require('./ProductManager');
+const viewsRouter = require('./routes/viewsRoutes');
 
 const connectDB = require ('./config/db')
 
@@ -30,6 +30,7 @@ app.set('views', path.join(__dirname, '../views'));
 app.use(express.json());
 app.use('/products', productsRouter);
 app.use('/api/carts', cartsRouter);
+app.use('/', viewsRouter);
 
 // Creación del servidor HTTP
 const server = http.createServer(app);
@@ -38,42 +39,6 @@ const io = socketIO(server);
 // Manejo de WebSockets
 io.on('connection', (socket) => {
   console.log('Nuevo cliente conectado');
-});
-
-// Instancia de ProductManager 
-const productManager = new ProductManager(filePath, io);
-
-// Ruta para mostrar productos (ejemplo de productos desde un archivo JSON)
-app.get('/', (req, res) => {
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error al leer el archivo:', err);
-      return;
-    }
-    res.send(data);
-  });
-});
-
-// Ruta para renderizar la vista 'home.handlebars'
-app.get('/home', async (req, res) => {
-  try {
-    const products = await productManager.getProducts();
-    res.render('layouts/home', { products }); 
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
-    res.render('layouts/error', { error: 'Error al obtener los productos' });
-  }
-});
-
-// Ruta para renderizar la vista 'realTimeProducts.handlebars'
-app.get('/realtimeproducts', async (req, res) => {
-  try {
-    const products = await productManager.getProducts();
-    res.render('layouts/realTimeProducts', { products }); 
-  } catch (error) {
-    console.error('Error al obtener productos:', error);
-    res.render('layouts/error', { error: 'Error al obtener los productos' });
-  }
 });
 
 // Iniciar el servidor

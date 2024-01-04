@@ -1,18 +1,11 @@
-const ProductManager = require('../ProductManager');
-const productManager = new ProductManager('../../productos.json');
+const productDao = require('../../daos/productDao');
 
 const getProducts = async (req, res) => {
   try {
     const { limit = 10, page = 1, sort, query } = req.query;
-    const products = await productManager.getProducts();
+    const products = await productDao.getProducts();
 
     let filteredProducts = [...products]; 
-
-    if (query) {
-      filteredProducts = filteredProducts.filter(product => 
-        product.category === query || product.availability === query
-      );
-    }
 
     if (sort === 'asc' || sort === 'desc') {
       filteredProducts.sort((a, b) => {
@@ -54,7 +47,7 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { pid } = req.params;
-    const product = await productManager.getProductById(parseInt(pid, 10));
+    const product = await productDao.getProductById(parseInt(pid, 10));
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -69,7 +62,7 @@ const getProductById = async (req, res) => {
 const addProduct = async (req, res) => {
   try {
     const newProduct = req.body;
-    await productManager.addProduct(newProduct);
+    await productDao.addProduct(newProduct);
     return res.status(201).json({ message: 'Product added successfully' });
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error' });
