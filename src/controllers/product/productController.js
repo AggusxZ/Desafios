@@ -1,10 +1,15 @@
 const productDao = require('../../daos/productDao');
 
-const getProducts = async (req, res) => {
+const renderProductsView = async (req, res) => {
   try {
+    const user = req.session.user;
+    if (!user) {
+      return res.redirect('/auth/login');
+    }
+
     const { limit = 10, page = 1, sort, query } = req.query;
     const products = await productDao.getProducts();
-
+    console.log(products);
     let filteredProducts = [...products]; 
 
     if (sort === 'asc' || sort === 'desc') {
@@ -21,13 +26,19 @@ const getProducts = async (req, res) => {
     const endIdx = startIdx + parseInt(limit, 10);
     const paginatedProducts = filteredProducts.slice(startIdx, endIdx);
 
+    const simplifiedProducts = paginatedProducts.map(product => ({
+      name: product.name,
+      price: product.price,
+      category: product.category,
+    }));
+
     const totalPages = Math.ceil(filteredProducts.length / limit);
     const hasNextPage = endIdx < filteredProducts.length;
     const hasPrevPage = page > 1;
 
     const response = {
       status: 'success',
-      payload: paginatedProducts,
+      payload: simplifiedProducts,
       totalPages,
       prevPage: hasPrevPage ? +page - 1 : null,
       nextPage: hasNextPage ? +page + 1 : null,
@@ -38,10 +49,21 @@ const getProducts = async (req, res) => {
       nextLink: hasNextPage ? `/api/products?limit=${limit}&page=${+page + 1}` : null,
     };
 
-    return res.json(response);
+    console.log(simplifiedProducts);
+    res.render('products', { products: simplifiedProducts, response, user });
   } catch (error) {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
+};
+
+
+const getProducts = async (req, res) => {
+
+  if (!req.session.user) {
+    return res.redirect('/auth/login');
+  }
+
+  return renderProductsView(req, res);
 };
 
 const getProductById = async (req, res) => {
@@ -71,6 +93,7 @@ const addProduct = async (req, res) => {
 
 module.exports = {
   getProducts,
+  renderProductsView, 
   getProductById,
   addProduct
 };
