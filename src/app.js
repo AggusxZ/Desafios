@@ -3,7 +3,9 @@ const path = require('path');
 const http = require('http');
 const socketIO = require('socket.io');
 const exphbs = require('express-handlebars');
+const passport = require('passport');
 const session = require('express-session');
+const configurePassport = require('./config/passportConfig');
 const MongoStore = require('connect-mongo');
 
 const productsRouter = require('./routes/productsRoutes');
@@ -17,6 +19,8 @@ const app = express();
 const PORT = 8080;
 
 connectDB();
+
+configurePassport();
 
 // Session con Mongo
 app.use(
@@ -35,6 +39,9 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Configuración de Handlebars
 const hbs = exphbs.create({

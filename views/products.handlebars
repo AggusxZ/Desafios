@@ -12,6 +12,10 @@
         {{#ifEqual user.role 'admin'}}
             <p>Eres un administrador.</p>
         {{/ifEqual}}
+
+        <form action="/auth/logout" method="post">
+            <button type="submit">Logout</button>
+        </form>
     {{/if}}
 
     <ul>
@@ -34,4 +38,5 @@
     </div>
 </body>
 </html>
+
 

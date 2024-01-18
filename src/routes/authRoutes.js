@@ -1,4 +1,5 @@
 const express = require('express');
+const passport = require('passport');
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/user.model');
@@ -18,7 +19,7 @@ router.post('/register', [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorMessages = errors.array().map(error => error.msg);
-            return res.status(400).json({ error: errorMessages[0] }); // Enviar solo el primer mensaje de error
+            return res.status(400).json({ error: errorMessages[0] }); 
         }
 
         const { email, password } = req.body;
@@ -78,15 +79,26 @@ router.post('/login', [
 });
 
 
-router.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
+router.post('/logout', (req, res) => {
+    req.logout((err) => {
         if (err) {
             console.error('Error al cerrar sesión:', err);
             return res.status(500).json({ error: 'Error interno del servidor' });
         }
-        res.json({ message: 'Sesión cerrada exitosamente' });
+        res.redirect('/auth/login');
     });
 });
+
+
+router.get('/github', passport.authenticate('github'));
+
+
+router.get('/github/callback',
+    passport.authenticate('github', { failureRedirect: '/' }),
+    (req, res) => {
+        res.redirect('/products');
+    });
+
 
 module.exports = router;
 
