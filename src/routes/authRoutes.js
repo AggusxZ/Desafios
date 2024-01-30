@@ -97,7 +97,7 @@ router.get('/github/callback',
     passport.authenticate('github', { failureRedirect: '/' }),
     (req, res) => {
         res.redirect('/products');
-    });
+});
 
 
 module.exports = router;

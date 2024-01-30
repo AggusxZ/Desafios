@@ -67,6 +67,11 @@ app.use('/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/', viewsRouter);
 
+// Redirección a /auth/login cuando se accede a la ruta principal
+app.get('/', (req, res) => {
+  res.redirect('/auth/login');
+});
+
 // Creación del servidor HTTP
 const server = http.createServer(app);
 const io = socketIO(server);
